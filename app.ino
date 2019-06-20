@@ -8,47 +8,40 @@
 
 void reconnect();
 void setup_wifi();
+void handleInterrupt(uint8_t num);
 
-static const uint8_t greenPin = A0;
-static const uint8_t intPin = 5;
-// static const uint8_t redPin = A1;
-// static const uint8_t bluePin = A2;
-uint16_t greenForce;
-uint16_t redForce;
-// uint16_t blueForce;
-uint64_t lastHit;
+static const uint8_t count = 2;
+static const uint8_t intPins[] = {5, 4}; // D1, D2
+static const char* topics[] = {MQTT_PLUG_TOPIC, MQTT_LIGHT_TOPIC};
+static void (*funcs[])() = {[]{handleInterrupt(0);}, []{handleInterrupt(1);}};
 
-volatile uint32_t interruptCounter = 0;
+volatile uint32_t interruptCounters[] = {0, 0};
+volatile uint64_t lastHits[] = {0, 0};
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void handleInterrupt()
+void handleInterrupt(uint8_t num)
 {
     uint64_t time = millis();
-    if(time - lastHit > 100) {
-        interruptCounter++;
+    if(time - lastHits[num] > 100) {
+        interruptCounters[num]++;
     }
-    lastHit = time;
+    lastHits[num] = time;
 }
 
 void setup()
 {
-    // p.Begin(); // start plotter
-
-    // pinMode(greenPin, INPUT);
-    pinMode(intPin, INPUT_PULLUP);
-    // pinMode(redPin, INPUT);
-    // pinMode(bluePin, INPUT);
+    for(uint8_t i = 0; i < count; i++) {
+        pinMode(intPins[0], INPUT_PULLUP);
+        pinMode(intPins[1], INPUT_PULLUP);
+        attachInterrupt(digitalPinToInterrupt(intPins[i]), funcs[i], RISING);
+    }
 
     Serial.begin(115200);
 
-    // setup_wifi();
-    // client.setServer(mqtt_server, 1883);
-
-    lastHit = 0;
-
-    attachInterrupt(digitalPinToInterrupt(intPin), handleInterrupt, FALLING);
+    setup_wifi();
+    client.setServer(MQTT_SERVER_IP, 1883);
 }
 
 void setup_wifi() {
@@ -93,22 +86,23 @@ void reconnect()
 
 void loop()
 {
-    // if (!client.connected()) {
-    //     Serial.println(client.state());
-    //     reconnect();
-    // }
-    // client.loop();
+    if (!client.connected()) {
+        Serial.println(client.state());
+        reconnect();
+    }
+    client.loop();
 
-    // greenForce = analogRead(greenPin);
-    // redForce = analogRead(redPin);
-    // blueForce = analogRead(bluePin);
-    // Serial.println(interruptCounter);
-    Serial.println(interruptCounter);
+    // Serial.println(interruptCounters[0]);
+    // Serial.println(interruptCounters[1]);
 
-    // if(interruptCounter)
-    // {
-    //     Serial.println("Publish");
-    //     client.publish(mqtt_topic, "TOGGLE", true);
-    // }
+    for(uint8_t i = 0; i < count; i++) {
+        if(interruptCounters[i])
+        {
+            interruptCounters[i] = 0;
+            Serial.print("Publish ");
+            Serial.println(i);
+            client.publish(topics[i], "TOGGLE", true);
+        }
+    }
     delay(1);
 }

@@ -15,6 +15,7 @@
 #define MQTT_PASSWORD ""
 
 // Topics to send MQTT messages
-#define MQTT_TOPIC ""
+#define MQTT_PLUG_TOPIC ""
+#define MQTT_LIGHT_TOPIC ""
 
 #endif // Details_h
