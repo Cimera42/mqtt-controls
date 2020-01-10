@@ -10,5 +10,11 @@ The current implementation uses piezoelectric drums salvaged from a ['Guitar Her
 
 Part of the project involved clamping the drum face to the side of a table, so I modelled and 3D printed a clamp, which can be found in the `models` folder. I used whatever screws and bolts I had on hand, so the model will need to be modified for use by others. The modelling software used was [SolveSpace](https://github.com/solvespace/solvespace).
 
+The basic clamp broke fairly quickly at the corner, so I ran it through topology optimisation offered in Fusion360.
 
+|Fusion360|Slic3r|
+|-|-|
+|![Fusion360 topology optimisation](./images/topology-fusion.png)|![Optimised model in Slic3r](./images/topology-slic3r.png)|
+
+#### Physical Setup
 ![Image of setup](./images/setup.jpg)
